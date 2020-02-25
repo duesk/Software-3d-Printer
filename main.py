@@ -10,10 +10,8 @@ import time
 ruta = ""
 gcode = ""
 temp_global = ""
-temp_lb = "20.0"
-
-def send_gcode():
-    printer.send("G28")
+temp_state = ""
+temp_set = 100
 
 def select_file():
     global ruta 
@@ -34,13 +32,38 @@ def select_file():
 
 def get_temp(printer):
     printer.send_now("M105")
-    print("holas: "+ temp_global)
+    print("holas:"+ temp_global)
+    
+
+def set_temp(printer,temp_label_extruder):
+    global temp_state
+    global temp_set
+    temp_saved = 0
+    while not printer.online:
+        time.sleep(0.1)
+    if (temp_set != temp_saved):
+        temp_saved = temp_set
+        printer.send_now("M104 S%d" %temp_set)
+        print("temperatura seteada")
+    time.sleep(1)
+    get_temp(printer)
+    time.sleep(3)
+    while True:
+        get_temp(printer)
+        time.sleep(3)
+        temp_label_extruder.set("Temperatura: " + temp_state)
+        lb_temp.pack()
+        print("ciclo")
 
 
 def temp_callback(a):
-    global temp_global
+    global temp_state 
+    temp_state = ""
     print('temp_callback', a)
-    temp_global = a
+    for i in range(5,8):
+        temp_state += a[i]
+    #print("Parse:" + temp_state)
+
 
 if __name__ == "__main__":
 
@@ -61,14 +84,17 @@ if __name__ == "__main__":
 
     ############# TEMP
     temp_label_extruder = StringVar()
-    temp_label_extruder.set("Temperatura: " + temp_lb)
+    temp_label_extruder.set("Temperatura: " + " 20.0")
     lb_temp = Label(root, textvar = temp_label_extruder)
     lb_temp.pack(pady = 20, padx = 20)
 
 
-    #inicio del thread.
-    #tread_1 = threading.Thread(target = set_temp, args = () )
 
+    #inicio del thread.
+    thread_1 = threading.Thread(target = set_temp, args = (printer, temp_label_extruder, ) )
+    thread_1.start()
+    
 
     root.mainloop()
     printer.disconnect()
+
