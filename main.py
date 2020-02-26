@@ -67,6 +67,9 @@ def temp_callback(a):
 
 if __name__ == "__main__":
 
+    #variables de estilo
+    title_size_font = 16
+
     puerto = run_select_port()
     print("puerto recibido : " + puerto)
 
@@ -77,7 +80,8 @@ if __name__ == "__main__":
     printer.tempcb = temp_callback
 
     root = Tk()
-
+    root.minsize(500,700)
+    Label(root, text = "Temperatura",font = ("",title_size_font)).pack(anchor = "nw",padx = 15, pady = 15)
 
     Button(root, text = "send gcode", command = select_file).pack()
     #Button(text = "get temp", command = lambda : get_temp(printer)).pack()
