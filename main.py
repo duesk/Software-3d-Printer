@@ -6,6 +6,8 @@ from Select_port import run_select_port
 from printrun.printcore import printcore
 from printrun.gcoder import LightGCode as LightGCode 
 
+
+
 import PIL
 from PIL import Image
 from PIL import ImageTk
@@ -20,6 +22,9 @@ temp_state = ""
 temp_set = 180
 is_printing = False
 is_pause = False
+
+len_gcode = 0.0
+index_actual = 0.0
 
 def select_file(archivo_selected):
     global ruta 
@@ -72,7 +77,11 @@ def start_print():
             gcode = [i.strip() for i in open(ruta)]
             gcode = LightGCode(gcode)
             printer.startprint(gcode)
+            print(gcode)
             printer.send_now("G90")
+
+
+
             btn_cancel["state"] = ACTIVE
             btn_start_print["text"] = "pausa"
             is_printing = True
@@ -124,9 +133,12 @@ def thread_set(printer,temp_label_extruder):
             if is_pause:
                 printer.send_now("G1 X0.0 Y0.0 Z100.0 F6000")
                 print("printer pausada enviando gcode de posicion de pausa")
-        #progressbar.step()
-        
-
+        a = len(printer.mainqueue)
+        b = printer.queueindex
+        progress = 100 * b / a
+        progress = round(progress,2)
+        print(progress)
+        progressbar.step(progress)
 
 def temp_callback(a):
     global temp_state 
