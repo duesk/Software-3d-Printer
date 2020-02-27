@@ -544,9 +544,12 @@ class printcore():
         self.print_thread = None
 
         # saves the status
-        self.pauseX = self.analyzer.abs_x
-        self.pauseY = self.analyzer.abs_y
-        self.pauseZ = self.analyzer.abs_z
+        self.pauseX = 0.0
+        self.pauseY = 0.0
+        self.pauseZ = 10.0
+        #self.pauseX = self.analyzer.abs_x
+        #self.pauseY = self.analyzer.abs_y
+        #self.pauseZ = self.analyzer.abs_z
         self.pauseE = self.analyzer.abs_e
         self.pauseF = self.analyzer.current_f
         self.pauseRelative = self.analyzer.relative

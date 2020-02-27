@@ -1,5 +1,6 @@
 from tkinter import *
 from tkinter import ttk
+from tkinter import messagebox as Messagebox
 from tkinter import filedialog as Filedialog
 from Select_port import run_select_port
 from printrun.printcore import printcore
@@ -13,26 +14,82 @@ import threading
 import time
 
 ruta = ""
-gcode = ""
+gcode = []
 temp_global = ""
 temp_state = ""
 temp_set = 180
+is_printing = False
+is_pause = False
 
-def select_file():
+def select_file(archivo_selected):
     global ruta 
     global gcode 
     ruta = Filedialog.askopenfilename(initialdir = "~/Escritorio", title = "Abrir archivo" , filetypes = (("Gcode", "*.gcode"),)  )
-    print(ruta)
+
     if ruta != "":
-        archivo = open(ruta, "r")
-        gcode = archivo.readlines()
-        archivo.close()
-        print(gcode)
-        printer.send("G28")
-        gcode = [i.strip() for i in open(ruta)]
-        gcode = LightGCode(gcode)
-        printer.startprint(gcode)
-        printer.send_now("G90")
+        archivo = ""
+        for i in range(len(ruta),0,-1):
+            if ruta[i-1] != "/":
+                index = i-1
+            else:
+                archivo = ruta[index:len(ruta)]
+                break
+        print("archivo seleccioado: " + archivo)
+
+        archivo_selected.set("Seleccionado: "+archivo)
+        lb_Select_file.pack()
+        btn_start_print["state"] = ACTIVE
+    else:
+        archivo_selected.set("Ningun archivo seleccionado")
+        lb_Select_file.pack()
+        btn_start_print["state"] = DISABLED
+
+
+def start_print():
+    global ruta 
+    global gcode
+    global is_printing 
+    global is_pause
+
+    if is_printing:
+        if is_pause:
+            is_pause = False 
+            printer.resume()
+            btn_start_print["text"] = "Pausar"
+        else:
+            is_pause = True
+            printer.pause()
+            printer.send_now("G1 X0.0 Y0.0 Z100.0 F6000")
+            btn_start_print["text"] = "Reanudar"
+
+    else:
+        if ruta != "":
+            archivo = open(ruta, "r")
+            gcode = archivo.readlines()
+            archivo.close()
+            #print(gcode)
+            printer.send("G28")
+            gcode = [i.strip() for i in open(ruta)]
+            gcode = LightGCode(gcode)
+            printer.startprint(gcode)
+            printer.send_now("G90")
+            btn_cancel["state"] = ACTIVE
+            btn_start_print["text"] = "pausa"
+            is_printing = True
+        
+
+def cancel_print():
+    global is_printing
+    global is_pause
+
+    cancel = Messagebox.askyesno("Alerta","Seguro que quieres cancelar la impresion?")
+    if cancel:
+        printer.cancelprint()
+        printer.send_now("G1 X0.0 Y0.0 Z100.0 F6000")
+        is_printing = False
+        is_pause = False
+        btn_start_print["text"] = "Imprimir"
+        btn_cancel["state"] = DISABLED
 
 
 def get_temp(printer):
@@ -40,15 +97,17 @@ def get_temp(printer):
     #print("holas:"+ temp_global)
     
 
-def set_temp(printer,temp_label_extruder):
+def thread_set(printer,temp_label_extruder):
     global temp_state
     global temp_set
+    global is_pause
+    
     temp_saved = 0
     
     while not printer.online:
         print("impresora no online")
         time.sleep(0.1)
-
+        i=0
     while True:
         print("temp set: " + str(temp_set))
         print("temp saved: " + str(temp_saved))
@@ -58,9 +117,15 @@ def set_temp(printer,temp_label_extruder):
             print("temperatura seteada")
         get_temp(printer)
         time.sleep(3)
-        temp_label_extruder.set("Temp. actual:     %s°C     de     " %temp_state)
+        temp_label_extruder.set("Actual:     %s°C     de     " %temp_state)
         lb_temp.pack()
         print("ciclo")
+        if is_printing:
+            if is_pause:
+                printer.send_now("G1 X0.0 Y0.0 Z100.0 F6000")
+                print("printer pausada enviando gcode de posicion de pausa")
+        #progressbar.step()
+        
 
 
 def temp_callback(a):
@@ -132,10 +197,13 @@ if __name__ == "__main__":
     #######################################
 
     temp_label_extruder = StringVar()
-    temp_label_extruder.set("Temp. actual:     --°C     de     ")
+    temp_label_extruder.set("Actual:     --°C     de     ")
 
     temp_set_var = StringVar()
     temp_set_var.set(str(temp_set))
+
+    archivo_selected = StringVar()
+    archivo_selected.set("Ningun archivo seleccionado")
 
 
 
@@ -210,14 +278,14 @@ if __name__ == "__main__":
 
     ttk.Separator(frame_3, orient='horizontal').pack( fill='x') #linea separadora
 
-    bt_select_file = Button(frame_3, text = " Seleccionar ",font = (font ,content_size_font),bg = color_button, fg = color_text_button )
+    bt_select_file = Button(frame_3, text = " Seleccionar ",font = (font ,content_size_font),bg = color_button, fg = color_text_button, command = lambda: select_file(archivo_selected))
     bt_select_file.config(activebackground = color_bg_activate_button, activeforeground = color_font_activate_button)
     bt_select_file.pack(side = "left", pady = 10)
 
     Label(frame_3, text = "   ", font = (font ,content_size_font), bg = color_theme).pack(side = "left",pady = 15)
 
 
-    lb_Select_file = Label(frame_3, text = "Ningun archivo seleccionado", font = (font ,content_size_font))
+    lb_Select_file = Label(frame_3, textvar = archivo_selected, font = (font ,content_size_font))
     lb_Select_file.config(bg = color_theme)
     lb_Select_file.pack(side = "left",pady = 15)
     ########################################
@@ -231,14 +299,17 @@ if __name__ == "__main__":
 
     ttk.Separator(frame_4, orient='horizontal').pack( fill='x') #linea separadora
 
-    btn_start_print = Button(frame_4, text = "Imprimir",font = (font ,content_size_font),bg = color_button, fg = color_text_button )
+    btn_start_print = Button(frame_4, text = "Imprimir", font = (font ,content_size_font),bg = color_button, 
+                            fg = color_text_button, state = DISABLED, command =  start_print)
+
     btn_start_print.config(activebackground = color_bg_activate_button, activeforeground = color_font_activate_button)
     btn_start_print.pack(side = "left", pady = 10)
 
     Label(frame_4, text = "   ", font = (font ,content_size_font), bg = color_theme).pack(side = "left",pady = 15)
 
 
-    btn_cancel = Button(frame_4, text = "Cancelar",font = (font ,content_size_font),bg = color_button, fg = color_text_button)
+    btn_cancel = Button(frame_4, text = "Cancelar",font = (font ,content_size_font),bg = color_button, 
+                        fg = color_text_button, state = DISABLED, command = cancel_print )
     btn_cancel.config(activebackground = color_bg_activate_button, activeforeground = color_font_activate_button)
     btn_cancel.pack(side = "left", pady = 10)
 
@@ -252,7 +323,7 @@ if __name__ == "__main__":
 
     progressbar = ttk.Progressbar(frame_5, length = 100, mode = "determinate", style = "red.Horizontal.TProgressbar")
     progressbar.pack(fill = "both", expand = 1, pady = 10)
-    progressbar.step(90.0)
+    #progressbar.step(90.0)
 
     
 
@@ -261,7 +332,7 @@ if __name__ == "__main__":
     #########################################################################
 
     #inicio del thread.
-    thread_1 = threading.Thread(target = set_temp, args = (printer, temp_label_extruder, ) )
+    thread_1 = threading.Thread(target = thread_set, args = (printer, temp_label_extruder, ) )
     thread_1.start()
     
 
