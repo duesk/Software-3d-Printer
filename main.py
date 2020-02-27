@@ -16,7 +16,7 @@ ruta = ""
 gcode = ""
 temp_global = ""
 temp_state = ""
-temp_set = 100
+temp_set = 180
 
 def select_file():
     global ruta 
@@ -37,26 +37,28 @@ def select_file():
 
 def get_temp(printer):
     printer.send_now("M105")
-    print("holas:"+ temp_global)
+    #print("holas:"+ temp_global)
     
 
 def set_temp(printer,temp_label_extruder):
     global temp_state
     global temp_set
     temp_saved = 0
+    
     while not printer.online:
+        print("impresora no online")
         time.sleep(0.1)
-    if (temp_set != temp_saved):
-        temp_saved = temp_set
-        printer.send_now("M104 S%d" %temp_set)
-        print("temperatura seteada")
-    time.sleep(1)
-    get_temp(printer)
-    time.sleep(3)
+
     while True:
+        print("temp set: " + str(temp_set))
+        print("temp saved: " + str(temp_saved))
+        if (temp_set != temp_saved):
+            temp_saved = temp_set
+            printer.send_now("M104 S%d" %temp_set)
+            print("temperatura seteada")
         get_temp(printer)
         time.sleep(3)
-        temp_label_extruder.set("Temperatura: " + temp_state)
+        temp_label_extruder.set("Temp. actual:     %s°C     de     " %temp_state)
         lb_temp.pack()
         print("ciclo")
 
@@ -69,6 +71,22 @@ def temp_callback(a):
         temp_state += a[i]
     #print("Parse:" + temp_state)
 
+def high_temp(temp_set_var):
+    global temp_set
+    temp_set +=1
+    temp_set_var.set(str(temp_set))
+    lb_set_temp.pack()
+
+def low_temp(temp_set_var):
+    global temp_set
+    temp_set -=1
+    temp_set_var.set(str(temp_set))
+    lb_set_temp.pack()
+
+#########################################################################
+##################               init               #####################
+#########################################################################
+
 
 if __name__ == "__main__":
 
@@ -77,7 +95,7 @@ if __name__ == "__main__":
     content_size_font = 12
     color_theme = "snow"
     color_button = "deepskyblue3"
-    color_text_button = "gray25"
+    color_text_button = "gray99"
     font = "Garuda"
     color_font_activate_button = "gray25"
     color_bg_activate_button = "deep sky Blue"
@@ -90,7 +108,7 @@ if __name__ == "__main__":
 
     #init printer
     printer =  printcore( puerto, 115200)
-    printer.online
+    #printer.online
     printer.tempcb = temp_callback
 
 
@@ -107,6 +125,18 @@ if __name__ == "__main__":
 
     im = PIL.Image.open("logo.png")
     logo = PIL.ImageTk.PhotoImage(im)
+
+
+    #######################################
+    ###             Textvar             ###
+    #######################################
+
+    temp_label_extruder = StringVar()
+    temp_label_extruder.set("Temp. actual:     --°C     de     ")
+
+    temp_set_var = StringVar()
+    temp_set_var.set(str(temp_set))
+
 
 
     #frame con padiing 15px
@@ -140,19 +170,29 @@ if __name__ == "__main__":
 
     ttk.Separator(frame_2, orient='horizontal').pack(side='top', fill='x') #linea separadora
 
-    lb_temp = Label(frame_2, text = "Temperatura: 200°C/  ",font = (font ,content_size_font) )
+    #label Temperatura 
+    lb_temp = Label(frame_2, textvar = temp_label_extruder,font = (font ,content_size_font) )
     lb_temp.config(bg = color_theme)
     lb_temp.pack(side = "left", anchor = "nw", pady = 15)
+
+    #Label(frame_2, text = "   /   ", font = (font ,content_size_font), bg = color_theme).pack(side = "left",pady = 15)
     
-    btn_lower_temp = Button(frame_2, text = "—",font = (font ,content_size_font),bg = color_button, fg = color_text_button )
+    btn_lower_temp = Button(frame_2, text = "—",font = (font ,content_size_font),bg = color_button, fg = color_text_button, command = lambda: low_temp(temp_set_var) )
     btn_lower_temp.config(activebackground = color_bg_activate_button, activeforeground = color_font_activate_button)
     btn_lower_temp.pack(side = "left", anchor = "nw", pady = 10)
 
-    lb_set_temp = Label(frame_2, text = "180°C", font = (font ,content_size_font))
-    lb_set_temp.config(bg = color_theme)
+
+    #separador
+    Label(frame_2, text = " ", font = (font ,content_size_font), bg = color_theme).pack(side = "left",pady = 15)
+
+    lb_set_temp = Label(frame_2, textvar = temp_set_var, font = (font ,content_size_font))
+    lb_set_temp.config(bg = "gray87")
     lb_set_temp.pack(side = "left", anchor = "nw", pady = 15)
 
-    btn_higher_temp = Button(frame_2, text = "+",font = (font ,content_size_font),bg = color_button, fg = color_text_button,  )
+    #separador
+    Label(frame_2, text = " ", font = (font ,content_size_font), bg = color_theme).pack(side = "left",pady = 15)
+
+    btn_higher_temp = Button(frame_2, text = "+",font = (font ,content_size_font),bg = color_button, fg = color_text_button, command = lambda: high_temp(temp_set_var) )
     btn_higher_temp.config(activebackground = color_bg_activate_button, activeforeground = color_font_activate_button)
     btn_higher_temp.pack(side = "left", anchor = "nw",pady= 10)
 
@@ -170,7 +210,7 @@ if __name__ == "__main__":
 
     ttk.Separator(frame_3, orient='horizontal').pack( fill='x') #linea separadora
 
-    bt_select_file = Button(frame_3, text = " Buscar ",font = (font ,content_size_font),bg = color_button, fg = color_text_button )
+    bt_select_file = Button(frame_3, text = " Seleccionar ",font = (font ,content_size_font),bg = color_button, fg = color_text_button )
     bt_select_file.config(activebackground = color_bg_activate_button, activeforeground = color_font_activate_button)
     bt_select_file.pack(side = "left", pady = 10)
 
@@ -191,14 +231,14 @@ if __name__ == "__main__":
 
     ttk.Separator(frame_4, orient='horizontal').pack( fill='x') #linea separadora
 
-    btn_start_print = Button(frame_4, text = "imprimir",font = (font ,content_size_font),bg = color_button, fg = color_text_button )
+    btn_start_print = Button(frame_4, text = "Imprimir",font = (font ,content_size_font),bg = color_button, fg = color_text_button )
     btn_start_print.config(activebackground = color_bg_activate_button, activeforeground = color_font_activate_button)
     btn_start_print.pack(side = "left", pady = 10)
 
     Label(frame_4, text = "   ", font = (font ,content_size_font), bg = color_theme).pack(side = "left",pady = 15)
 
 
-    btn_cancel = Button(frame_4, text = "cancelar",font = (font ,content_size_font),bg = color_button, fg = color_text_button)
+    btn_cancel = Button(frame_4, text = "Cancelar",font = (font ,content_size_font),bg = color_button, fg = color_text_button)
     btn_cancel.config(activebackground = color_bg_activate_button, activeforeground = color_font_activate_button)
     btn_cancel.pack(side = "left", pady = 10)
 
@@ -214,7 +254,7 @@ if __name__ == "__main__":
     progressbar.pack(fill = "both", expand = 1, pady = 10)
     progressbar.step(90.0)
 
-    root.mainloop()
+    
 
     #########################################################################
     ##################        inicio del thread        ######################
