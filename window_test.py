@@ -10,10 +10,16 @@ if __name__ == "__main__":
 
     title_size_font = 16
     content_size_font = 12
-    color_theme = "paleTurquoise1"
-    color_button = "deep sky blue"
+    color_theme = "snow"
+    color_button = "deepskyblue3"
+    color_text_button = "gray25"
+    font = "Garuda"
+    color_font_activate_button = "gray25"
+    color_bg_activate_button = "deep sky Blue"
+
 
     root = Tk()
+    root.title( "Colibri 3D")
     root.minsize(500,310)
     #root.maxsize(500,700)
     root.resizable(0,0)
@@ -38,7 +44,7 @@ if __name__ == "__main__":
     sub_frame_1.pack(side = "top", anchor = "nw",fill = "both")
     
     #Label title TEMPERATURA
-    lb_title_temp = Label(sub_frame_1, text = "Temperatura",font = ("",title_size_font),)
+    lb_title_temp = Label(sub_frame_1, text = "Temperatura",font = (font ,title_size_font),)
     lb_title_temp.config(bg = color_theme)
     lb_title_temp.pack(side = "left",anchor = "s")
 
@@ -54,18 +60,20 @@ if __name__ == "__main__":
 
     ttk.Separator(frame_2, orient='horizontal').pack(side='top', fill='x') #linea separadora
 
-    lb_temp = Label(frame_2, text = "Temperatura: 200°C/  ",font = ("",content_size_font) )
+    lb_temp = Label(frame_2, text = "Temperatura: 200°C/  ",font = (font ,content_size_font) )
     lb_temp.config(bg = color_theme)
     lb_temp.pack(side = "left", anchor = "nw", pady = 15)
     
-    btn_lower_temp = Button(frame_2, text = "—",font = ("",content_size_font),bg = color_button, fg = "white" )
+    btn_lower_temp = Button(frame_2, text = "—",font = (font ,content_size_font),bg = color_button, fg = color_text_button )
+    btn_lower_temp.config(activebackground = color_bg_activate_button, activeforeground = color_font_activate_button)
     btn_lower_temp.pack(side = "left", anchor = "nw", pady = 10)
 
-    lb_set_temp = Label(frame_2, text = "180°C", font = ("",content_size_font))
+    lb_set_temp = Label(frame_2, text = "180°C", font = (font ,content_size_font))
     lb_set_temp.config(bg = color_theme)
     lb_set_temp.pack(side = "left", anchor = "nw", pady = 15)
 
-    btn_higher_temp = Button(frame_2, text = "+",font = ("",content_size_font),bg = color_button, fg = "white" )
+    btn_higher_temp = Button(frame_2, text = "+",font = (font ,content_size_font),bg = color_button, fg = color_text_button,  )
+    btn_higher_temp.config(activebackground = color_bg_activate_button, activeforeground = color_font_activate_button)
     btn_higher_temp.pack(side = "left", anchor = "nw",pady= 10)
 
     #########################################################################
@@ -76,16 +84,20 @@ if __name__ == "__main__":
     frame_3.config(bg = color_theme)
     frame_3.pack( side ="top", fill = "both", expand = 1)
     
-    lb_title_archivo = Label(frame_3, text = "Archivo", font=("",title_size_font))
+    lb_title_archivo = Label(frame_3, text = "Archivo", font=(font ,title_size_font))
     lb_title_archivo.config(bg = color_theme)
     lb_title_archivo.pack(side = "top",anchor = "nw")
 
     ttk.Separator(frame_3, orient='horizontal').pack( fill='x') #linea separadora
 
-    bt_select_file = Button(frame_3, text = "Buscar",font = ("",content_size_font),bg = color_button, fg = "white" )
+    bt_select_file = Button(frame_3, text = " Buscar ",font = (font ,content_size_font),bg = color_button, fg = color_text_button )
+    bt_select_file.config(activebackground = color_bg_activate_button, activeforeground = color_font_activate_button)
     bt_select_file.pack(side = "left", pady = 10)
 
-    lb_Select_file = Label(frame_3, text = "Ningun archivo seleccionado", font = ("",content_size_font))
+    Label(frame_3, text = "   ", font = (font ,content_size_font), bg = color_theme).pack(side = "left",pady = 15)
+
+
+    lb_Select_file = Label(frame_3, text = "Ningun archivo seleccionado", font = (font ,content_size_font))
     lb_Select_file.config(bg = color_theme)
     lb_Select_file.pack(side = "left",pady = 15)
     #########################################################################
@@ -99,14 +111,16 @@ if __name__ == "__main__":
 
     ttk.Separator(frame_4, orient='horizontal').pack( fill='x') #linea separadora
 
-    bt_start_print = Button(frame_4, text = "imprimir",font = ("",content_size_font),bg = color_button, fg = "white" )
-    bt_start_print.pack(side = "left", pady = 10)
+    btn_start_print = Button(frame_4, text = "imprimir",font = (font ,content_size_font),bg = color_button, fg = color_text_button )
+    btn_start_print.config(activebackground = color_bg_activate_button, activeforeground = color_font_activate_button)
+    btn_start_print.pack(side = "left", pady = 10)
 
-    Label(frame_4, text = "   ", font = ("",content_size_font), bg = color_theme).pack(side = "left",pady = 15)
+    Label(frame_4, text = "   ", font = (font ,content_size_font), bg = color_theme).pack(side = "left",pady = 15)
 
 
-    bt_cancel = Button(frame_4, text = "cancelar",font = ("",content_size_font),bg = color_button, fg = "white" )
-    bt_cancel.pack(side = "left", pady = 10)
+    btn_cancel = Button(frame_4, text = "cancelar",font = (font ,content_size_font),bg = color_button, fg = color_text_button)
+    btn_cancel.config(activebackground = color_bg_activate_button, activeforeground = color_font_activate_button)
+    btn_cancel.pack(side = "left", pady = 10)
 
 
     #########################################################################
