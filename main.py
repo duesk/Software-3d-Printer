@@ -100,11 +100,7 @@ def cancel_print():
         btn_start_print["text"] = "Imprimir"
         btn_cancel["state"] = DISABLED
 
-
-def get_temp(printer):
-    printer.send_now("M105")
-    #print("holas:"+ temp_global)
-    
+  
 
 def thread_set(printer,temp_label_extruder):
     global temp_state
@@ -116,29 +112,35 @@ def thread_set(printer,temp_label_extruder):
     while not printer.online:
         print("impresora no online")
         time.sleep(0.1)
-        i=0
     while True:
-        print("temp set: " + str(temp_set))
-        print("temp saved: " + str(temp_saved))
+        #print("temp set: " + str(temp_set))
+        #print("temp saved: " + str(temp_saved))
         if (temp_set != temp_saved):
             temp_saved = temp_set
             printer.send_now("M104 S%d" %temp_set)
-            print("temperatura seteada")
-        get_temp(printer)
+            print("Temperatura enviada")
+        printer.send_now("M105")
         time.sleep(3)
         temp_label_extruder.set("Actual:     %s°C     de     " %temp_state)
         lb_temp.pack()
-        print("ciclo")
+        error = printer.errorcb
+        list_error =list(error)
+        for i in range(0,len(list_error)):
+            if 
+
+        #format_error(error)
+        #print(error)
         if is_printing:
             if is_pause:
                 printer.send_now("G1 X0.0 Y0.0 Z100.0 F6000")
                 print("printer pausada enviando gcode de posicion de pausa")
-        a = len(printer.mainqueue)
-        b = printer.queueindex
-        progress = 100 * b / a
-        progress = round(progress,2)
-        print(progress)
-        progressbar.step(progress)
+            a = len(printer.mainqueue)
+            b = printer.queueindex
+            progress = 100 * b / a
+            progress = round(progress,2)
+            print(progress)
+            progressbar.step(progress)
+        print("status : working")
 
 def temp_callback(a):
     global temp_state 

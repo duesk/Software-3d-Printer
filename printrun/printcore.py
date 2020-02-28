@@ -103,7 +103,9 @@ class printcore():
         self.preprintsendcb = None  # impl (wholeline)
         self.printsendcb = None  # impl (wholeline)
         self.layerchangecb = None  # impl (wholeline)
-        self.errorcb = None  # impl (wholeline)
+
+        self.errorcb = []   # impl (wholeline)
+
         self.startcb = None  # impl ()
         self.endcb = None  # impl ()
         self.onlinecb = None  # impl ()
@@ -142,6 +144,10 @@ class printcore():
         self.event_handler.append(handler)
 
     def logError(self, error):
+        self.errorcb.append(error)
+
+
+    """
         for handler in self.event_handler:
             try: handler.on_error(error)
             except: logging.error(traceback.format_exc())
@@ -150,6 +156,8 @@ class printcore():
             except: logging.error(traceback.format_exc())
         else:
             logging.error(error)
+            ##self.errorcb=error
+    """
 
     @locked
     def disconnect(self):
@@ -544,12 +552,10 @@ class printcore():
         self.print_thread = None
 
         # saves the status
-        self.pauseX = 0.0
-        self.pauseY = 0.0
-        self.pauseZ = 10.0
-        #self.pauseX = self.analyzer.abs_x
-        #self.pauseY = self.analyzer.abs_y
-        #self.pauseZ = self.analyzer.abs_z
+
+        self.pauseX = self.analyzer.abs_x
+        self.pauseY = self.analyzer.abs_y
+        self.pauseZ = self.analyzer.abs_z
         self.pauseE = self.analyzer.abs_e
         self.pauseF = self.analyzer.current_f
         self.pauseRelative = self.analyzer.relative
