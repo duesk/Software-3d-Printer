@@ -25,6 +25,7 @@ temp_set = 180
 is_printing = False
 is_pause = False
 response = False
+st_print = False
 
 len_gcode = 0.0
 index_actual = 0.0
@@ -58,6 +59,9 @@ def start_print():
     global gcode
     global is_printing 
     global is_pause
+    global temp_state
+    global temp_set
+    global st_print
 
     if is_printing:
         if is_pause:
@@ -79,15 +83,9 @@ def start_print():
             printer.send("G28")
             gcode = [i.strip() for i in open(ruta)]
             gcode = LightGCode(gcode)
-            printer.startprint(gcode)
-            print(gcode)
-            printer.send_now("G90")
+            st_print = True
 
 
-
-            btn_cancel["state"] = ACTIVE
-            btn_start_print["text"] = "pausa"
-            is_printing = True
         
 
 def cancel_window():
@@ -95,9 +93,12 @@ def cancel_window():
     win.title('Peligro')
     message = "¡Seguro que deseas cancelar la impresion?"
     Label(win, text=message).pack()
-    Button(win, text="Si", command= lambda : cancel_print(win)).pack()
-    Button(win, text="No", command=win.destroy).pack()
-
+    frame = Frame(win)
+    Button(frame, text="Si", command= lambda : cancel_print(win),activebackground = color_bg_activate_button, activeforeground = color_font_activate_button, 
+            font = (font ,content_size_font),bg = color_button, fg = color_text_button).pack(side = "left")
+    Button(frame, text="No", command=win.destroy,activebackground = color_bg_activate_button, activeforeground = color_font_activate_button, 
+            font = (font ,content_size_font),bg = color_button, fg = color_text_button).pack(side = "left")
+    frame.pack()
 
 def cancel_print(win):
     global is_printing
@@ -116,12 +117,13 @@ def thread_set(printer,temp_label_extruder):
     global temp_state
     global temp_set
     global is_pause
+    global st_print
     
+    is_printing = False
+    is_pause = False
     temp_saved = 0
     kill = False
-    while not printer.online:
-        print("impresora no online")
-        time.sleep(0.1)
+
     while True:
         #print("temp set: " + str(temp_set))
         #print("temp saved: " + str(temp_saved))
@@ -156,15 +158,28 @@ def thread_set(printer,temp_label_extruder):
             progress = 100 * b / a
             progress = round(progress,2)
             print(progress)
+            status_label.set("Imprimiendo: " + str(progress))
             progressbar.step(progress)
         print("status : thread is working")
+
+        if st_print:
+            min_temp = temp_set -5
+            if float(temp_state) >= min_temp:
+                st_print = False  
+                printer.startprint(gcode)
+                printer.send_now("G90")
+                btn_cancel["state"] = ACTIVE
+                btn_start_print["text"] = "pausa"
+                is_printing = True
+                status_label.set("Imprimiendo: ")
+            else:
+                status_label.set("Calentando")
 
 def temp_callback(a):
     global temp_state 
     temp_state = ""
     print('temp_callback', a)
-    for i in range(5,8):
-        temp_state += a[i]
+    temp_state = a[5:8]
     #print("Parse:" + temp_state)
 
 def high_temp(temp_set_var):
@@ -186,30 +201,50 @@ def low_temp(temp_set_var):
 
 if __name__ == "__main__":
 
-    #variables de estilo
-    title_size_font = 16
-    content_size_font = 12
-    color_theme = "snow"
-    color_button = "deepskyblue3"
-    color_text_button = "gray99"
-    font = "Garuda"
-    color_font_activate_button = "gray25"
-    color_bg_activate_button = "deep sky Blue"
+    while True:
+        #variables de estilo
+        title_size_font = 16
+        content_size_font = 12
+        color_theme = "snow"
+        color_button = "deepskyblue3"
+        color_text_button = "gray99"
+        font = "Garuda"
+        color_font_activate_button = "gray25"
+        color_bg_activate_button = "deep sky Blue"
 
+        puerto = run_select_port()
+        is_conect = False
 
-
-    puerto = run_select_port()
-    if puerto is not None:
-        print("puerto recibido : " + puerto)
+        if puerto is not None:
+            print("puerto recibido : " + puerto)
+            #init printer
+            printer =  printcore( puerto, 115200)
+            #printer.online
+            printer.tempcb = temp_callback
+            for i in range(0,30):
+                if printer.online:
+                    is_conect = True
+                    break
+                else:
+                    print("impresora no online")
+                    time.sleep(0.1)
+            if is_conect:
+                break
+            
+            if is_conect == False:
+                init_window = Tk()
+                init_window.title("Error de conexión ")
+                init_window.config(bg = color_theme)
+                Label(init_window, text= "Error el programa no pudo conectarse ",font = (font ,content_size_font), bg = color_theme).pack(side = "left", anchor = "nw", pady = 30,padx = 30)
+                Button(init_window, text = "Reiniciar" , activebackground = color_bg_activate_button, activeforeground = color_font_activate_button, 
+                        font = (font ,content_size_font),bg = color_button, fg = color_text_button, command = root.destroy).pack()
+                init_window.mainloop()
+            if is_conect:
+                break
+        else :
+            break
         
-
-
-        #init printer
-        printer =  printcore( puerto, 115200)
-        #printer.online
-        printer.tempcb = temp_callback
-
-
+    if is_conect:
         #########################################################################
         ##################            interfaz             ######################
         #########################################################################
@@ -238,7 +273,8 @@ if __name__ == "__main__":
         archivo_selected = StringVar()
         archivo_selected.set("Ningun archivo seleccionado")
 
-
+        status_label = StringVar()
+        status_label.set("impresora lista para imprimir")
 
         #frame con padiing 15px
         frame = Frame(root)
@@ -354,10 +390,15 @@ if __name__ == "__main__":
         frame_5.config(bg = color_theme)
         frame_5.pack(side= "left", fill = "both", expand = 1)
 
+        Label(frame_4, text = "   ", font = (font ,content_size_font), bg = color_theme).pack(side = "left",pady = 15)
+
         progressbar = ttk.Progressbar(frame_5, length = 100, mode = "determinate", style = "red.Horizontal.TProgressbar")
-        progressbar.pack(fill = "both", expand = 1, pady = 10)
+        progressbar.pack(fill = "both", expand = 1, )
         #progressbar.step(90.0)
 
+        lb_status = Label(frame_5, textvar = status_label,font = (font ,content_size_font) )
+        lb_status.config(bg = color_theme)
+        lb_status.pack(side = "left", anchor = "nw", pady = 15)
         
 
         #########################################################################
