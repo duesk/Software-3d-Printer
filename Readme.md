@@ -10,3 +10,5 @@
     
     ~ sudo chmod a+rw /dev/tty*
 
+ubuntu main.spec
+    datas=[('/usr/lib/python3/dist-packages/PIL/','PIL'),],

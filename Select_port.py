@@ -42,12 +42,19 @@ def update(lst_box_puertos):
     lst_box_puertos.config(font = ("",content_size_font))
     lst_box_puertos.pack()
 
+def cerrar_w(root):
+    global send_port
+    send_port = "cerrar"
+    root.destroy()
+    
+
 
 def w_select_port():
     
     root = Tk()
     root.minsize(400, 150 )
     root.config(bg = color_theme)
+    root.protocol("WM_DELETE_WINDOW", lambda : cerrar_w(root)) #accion al cerrar la ventana 
     
 
 

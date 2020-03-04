@@ -344,6 +344,9 @@ if __name__ == "__main__":
         is_conect = False
 
         if puerto is not None:
+            if puerto == "cerrar":
+                break
+
             print("puerto recibido : " + puerto)
             #init printer
             printer =  printcore( puerto, 115200)
@@ -355,10 +358,7 @@ if __name__ == "__main__":
                     break
                 else:
                     print("impresora no online")
-                    time.sleep(0.1)
-            if is_conect:
-                break
-            
+                    time.sleep(0.5)
             if is_conect == False:
                 init_window = Tk()
                 init_window.title("Error de conexión ")
@@ -368,8 +368,7 @@ if __name__ == "__main__":
                 init_window.mainloop()
             if is_conect:
                 break
-        else :
-            break
+
         
     if is_conect:
         #########################################################################

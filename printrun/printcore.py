@@ -13,7 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
-#__version__ = "2.0.0rc5"
+__version__ = "2.0.0rc5"
 
 import sys
 if sys.version_info.major < 3:
@@ -36,7 +36,7 @@ import selectors
 from functools import wraps, reduce
 from collections import deque
 from printrun import gcoder
-from .utils import set_utf8_locale, install_locale, decode_utf8
+from printrun.utils import set_utf8_locale, install_locale, setup_logging, decode_utf8
 try:
     set_utf8_locale()
 except:
@@ -250,17 +250,32 @@ class printcore():
                 self.printer_tcp = None
                 try:
                     if self.needs_parity_workaround:
+
                         self.printer = Serial(port = self.port,
                                               baudrate = self.baud,
-                                              timeout = 0.25,
+                                              timeout = 1,
                                               parity = PARITY_ODD)
                         self.printer.close()
                         self.printer.parity = PARITY_NONE
                     else:
+
+                        self.printer = Serial(baudrate = self.baud,
+                                              writeTimeout = 0,
+                                              parity = PARITY_NONE)
+                        self.printer.setPort(self.port)
+
+                        #####################################################
+                        #######         UBUNTU  NECESITA ESTO         #######
+                        #####################################################
+
+
+                        """
                         self.printer = Serial(baudrate = self.baud,
                                               timeout = 0.25,
                                               parity = PARITY_NONE)
                         self.printer.setPort(self.port)
+                        """
+
                     try:  #this appears not to work on many platforms, so we're going to call it but not care if it fails
                         self.printer.setDTR(dtr);
                     except:
