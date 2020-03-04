@@ -383,8 +383,8 @@ if __name__ == "__main__":
         root.config(bg = color_theme)
         root.protocol("WM_DELETE_WINDOW", lambda : close_window(root)) #accion al cerrar la ventana 
 
-
-        im = PIL.Image.open("logo.png")
+        
+        im = PIL.Image.open("assets/colibri.png")
         logo = PIL.ImageTk.PhotoImage(im)
 
 
