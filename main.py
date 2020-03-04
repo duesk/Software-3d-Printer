@@ -8,8 +8,6 @@ from printrun.gcoder import LightGCode as LightGCode
 from windows_errors import kill_error as kill_error
 import asyncio
 
-
-
 import PIL
 from PIL import Image
 from PIL import ImageTk
@@ -48,10 +46,15 @@ def select_file(archivo_selected):
         archivo_selected.set("Seleccionado: "+archivo)
         lb_Select_file.pack()
         btn_start_print["state"] = ACTIVE
+        btn_calibrate["state"] = ACTIVE
+
     else:
         archivo_selected.set("Ningun archivo seleccionado")
         lb_Select_file.pack()
         btn_start_print["state"] = DISABLED
+        btn_cancel["state"] = DISABLED
+        btn_calibrate["state"] = ACTIVE
+
 
 
 def start_print():
@@ -84,6 +87,11 @@ def start_print():
             gcode = [i.strip() for i in open(ruta)]
             gcode = LightGCode(gcode)
             st_print = True
+            btn_calibrate["state"] = DISABLED
+            bt_select_file["state"]=DISABLED
+
+            #btn_cancel["state"] = ACTIVE
+
 
 
         
@@ -91,7 +99,7 @@ def start_print():
 def cancel_window():
     win = Toplevel()
     win.title('Peligro')
-    message = "¡Seguro que deseas cancelar la impresion?"
+    message = "¿Seguro que deseas cancelar la impresion?"
     Label(win, text=message).pack()
     frame = Frame(win)
     Button(frame, text="Si", command= lambda : cancel_print(win),activebackground = color_bg_activate_button, activeforeground = color_font_activate_button, 
@@ -104,13 +112,22 @@ def cancel_print(win):
     global is_printing
     global is_pause
     global response
+    #global st_print
+    #st_print = False
     win.destroy()
+    is_printing = False
+    printer.queueindex = 0
     printer.cancelprint()
     printer.send_now("G1 X0.0 Y0.0 Z100.0 F4500")
-    is_printing = False
     is_pause = False
     btn_start_print["text"] = "Imprimir"
     btn_cancel["state"] = DISABLED
+    bt_select_file["state"]=ACTIVE
+    btn_calibrate["state"] = ACTIVE
+    status_label.set("Status: Impresion cancelada.")
+    progressbar["value"] = 0
+    progressbar.pack()
+
   
 
 def thread_set(printer,temp_label_extruder):
@@ -118,11 +135,14 @@ def thread_set(printer,temp_label_extruder):
     global temp_set
     global is_pause
     global st_print
-    
-    is_printing = False
+    global is_printing
+
+    #is_printing = False
     is_pause = False
     temp_saved = 0
     kill = False
+    fase = True
+    #printing = False
 
     while True:
         #print("temp set: " + str(temp_set))
@@ -144,36 +164,67 @@ def thread_set(printer,temp_label_extruder):
                 print("Error temp:  kill() is called ")
                 kill = True
         if kill:
-            kill_error(list_error)
-            root.destroy()
+            kill_error(list_error,root)
             break
         #format_error(error)
         #print(error)
-        if is_printing:
-            if is_pause:
-                printer.send_now("G1 X0.0 Y0.0 Z100.0 F4500")
-                print("printer pausada enviando gcode de posicion de pausa")
-            a = len(printer.mainqueue)
-            b = printer.queueindex
-            progress = 100 * b / a
-            progress = round(progress,2)
-            print(progress)
-            status_label.set("Imprimiendo: " + str(progress))
-            progressbar.step(progress)
-        print("status : thread is working")
-
         if st_print:
             min_temp = temp_set -5
             if float(temp_state) >= min_temp:
                 st_print = False  
+                printer.send_now("G28")
                 printer.startprint(gcode)
                 printer.send_now("G90")
+                #is_printing = True
                 btn_cancel["state"] = ACTIVE
+                bt_select_file["state"]=DISABLED
                 btn_start_print["text"] = "pausa"
-                is_printing = True
-                status_label.set("Imprimiendo: ")
+                status_label.set("Status: Imprimiendo ")
+                print("imprimiendo")
             else:
-                status_label.set("Calentando")
+                if fase:
+                    fase = False
+                    status_label.set("Status: Calentando . . .")
+                    print("calentando")
+                else:
+                    fase = True
+                    status_label.set("Status: Calentando. . .")
+                    print("calentando")
+        b = printer.queueindex
+        print("index:"+str(b))
+        if b >= 1:
+            is_printing = True
+        if is_printing:
+            if is_pause:
+                printer.send_now("G1 X0.0 Y0.0 Z100.0 F4500")
+                print("printer pausada enviando gcode de posicion de pausa")
+            try:
+                a = len(printer.mainqueue)
+                progress = 100 * b / a
+                progress = round(progress,2)
+                print(progress)
+                avance = "Status: Imprimiendo " + str(progress)
+                status_label.set(avance + "%")
+                progressbar["value"] = progress
+                progressbar.pack()
+            except:
+                print("except : Progress bar")
+            if b == 0:
+                #printing=False
+                is_printing = False
+                print("ya entre")
+                status_label.set("Status: Impresion terminada")
+                printer.send_now("G28")
+                is_printing = False
+                progressbar["value"] = 99.9
+                progressbar.pack()
+                btn_start_print["text"] = "Imprimir"
+                btn_calibrate["state"] = ACTIVE
+                btn_cancel["state"] = DISABLED
+                bt_select_file["state"]=ACTIVE
+        #else:
+            #status_label.set("Status: Impresora lista para imprimir")
+        print("Status : thread is working")
 
 def temp_callback(a):
     global temp_state 
@@ -193,6 +244,83 @@ def low_temp(temp_set_var):
     temp_set -=1
     temp_set_var.set(str(temp_set))
     lb_set_temp.pack()
+    
+
+def position_1():
+    printer.send_now("G28")
+    printer.send_now("G1 X45.0 Y-30.0 Z0.0 F3500")
+
+def position_2():
+    printer.send_now("G28")
+    printer.send_now("G1 X0.0 Y45.0 Z0.0 F3500")
+
+def position_3():
+    printer.send_now("G28")
+    printer.send_now("G1 X-45.0 Y-30.0 Z0.0 F3500")
+
+def cerrar(root,win):
+    root.deiconify()
+    win.destroy()
+
+
+
+def calibrate(root):
+    win = Toplevel()
+    #win.attributes("-type","notification")   #eliminar marco de sistema para cerrar
+    #win.overrideredirect(True)
+    win.protocol("WM_DELETE_WINDOW", lambda : cerrar(root,win)) #accion al cerrar la ventana 
+    win.title('Calibracion')
+    message = "Selecciona un boton para iniciar la calibracion "
+    Label(win, text=message).pack()
+    frame = Frame(win,pady = 50, padx = 50)
+    Button(frame, text="posición 1", command= position_1,activebackground = color_bg_activate_button, activeforeground = color_font_activate_button, 
+            font = (font ,content_size_font),bg = color_button, fg = color_text_button).grid(row = 1, column = 0 )
+    Button(frame, text="posición 2", command=position_2,activebackground = color_bg_activate_button, activeforeground = color_font_activate_button, 
+            font = (font ,content_size_font),bg = color_button, fg = color_text_button).grid(row = 1, column = 2)
+    Button(frame, text="posición 3", command=position_3,activebackground = color_bg_activate_button, activeforeground = color_font_activate_button, 
+            font = (font ,content_size_font),bg = color_button, fg = color_text_button).grid(row = 0, column = 1)
+    sub_frame = Frame(win, ) 
+    Label(sub_frame, text = "Para salir de la calibracion presione cerrar").pack()
+    Button(sub_frame, text="cerrar", command= lambda : cerrar(root,win),activebackground = color_bg_activate_button, activeforeground = color_font_activate_button, 
+            font = (font ,content_size_font),bg = color_button, fg = color_text_button).pack()
+    frame.pack()
+    sub_frame.pack( )
+    status_label.set("Status: Calibrando ")
+    root.withdraw()
+    
+
+def close_all(root):
+    pass
+
+def cancel_and_quit(win,root):
+    global is_printing
+    global is_pause
+    global response
+    win.destroy()
+    printer.cancelprint()
+    root.destroy()
+
+def close_window(root):
+    global is_printing
+    global st_print
+    if is_printing or st_print:
+        win = Toplevel()
+        win.title('Peligro')
+        message = "¿Seguro que deseas cancelar la impresion y cerrar la ventana?"
+        Label(win, text=message).pack()
+        frame = Frame(win)
+        Button(frame, text="Si", command= lambda : cancel_and_quit(win,root),activebackground = color_bg_activate_button, activeforeground = color_font_activate_button, 
+                font = (font ,content_size_font),bg = color_button, fg = color_text_button).pack(side = "left")
+        Button(frame, text="No", command=win.destroy,activebackground = color_bg_activate_button, activeforeground = color_font_activate_button, 
+                font = (font ,content_size_font),bg = color_button, fg = color_text_button).pack(side = "left")
+        frame.pack()
+    else:
+        root.destroy()
+
+
+
+
+
 
 #########################################################################
 ##################               init               #####################
@@ -236,8 +364,7 @@ if __name__ == "__main__":
                 init_window.title("Error de conexión ")
                 init_window.config(bg = color_theme)
                 Label(init_window, text= "Error el programa no pudo conectarse ",font = (font ,content_size_font), bg = color_theme).pack(side = "left", anchor = "nw", pady = 30,padx = 30)
-                Button(init_window, text = "Reiniciar" , activebackground = color_bg_activate_button, activeforeground = color_font_activate_button, 
-                        font = (font ,content_size_font),bg = color_button, fg = color_text_button, command = root.destroy).pack()
+                Button(init_window, text = "Reiniciar" , activebackground = color_bg_activate_button, activeforeground = color_font_activate_button, font = (font ,content_size_font),bg = color_button, fg = color_text_button, command = init_window.destroy).pack(side = "left")
                 init_window.mainloop()
             if is_conect:
                 break
@@ -248,13 +375,14 @@ if __name__ == "__main__":
         #########################################################################
         ##################            interfaz             ######################
         #########################################################################
-
         root = Tk()
         root.title( "Colibri 3D")
         root.minsize(500,310)
         #root.maxsize(500,700)
         root.resizable(0,0)
         root.config(bg = color_theme)
+        root.protocol("WM_DELETE_WINDOW", lambda : close_window(root)) #accion al cerrar la ventana 
+
 
         im = PIL.Image.open("logo.png")
         logo = PIL.ImageTk.PhotoImage(im)
@@ -370,7 +498,6 @@ if __name__ == "__main__":
 
         btn_start_print = Button(frame_4, text = "Imprimir", font = (font ,content_size_font),bg = color_button, 
                                 fg = color_text_button, state = DISABLED, command =  start_print)
-
         btn_start_print.config(activebackground = color_bg_activate_button, activeforeground = color_font_activate_button)
         btn_start_print.pack(side = "left", pady = 10)
 
@@ -380,8 +507,13 @@ if __name__ == "__main__":
         btn_cancel = Button(frame_4, text = "Cancelar",font = (font ,content_size_font),bg = color_button, 
                             fg = color_text_button, state = DISABLED, command = cancel_window )
         btn_cancel.config(activebackground = color_bg_activate_button, activeforeground = color_font_activate_button)
-        btn_cancel.pack(side = "left", pady = 10)
-
+        btn_cancel.pack(side = "left", pady = 10)        
+        
+        btn_calibrate = Button(frame_4, text = "Calibrar",font = (font ,content_size_font),bg = color_button, 
+                            fg = color_text_button, state = ACTIVE, command = lambda: calibrate(root))
+        btn_calibrate.config(activebackground = color_bg_activate_button, activeforeground = color_font_activate_button)
+        btn_calibrate.pack(side = "left", pady = 10)
+        
 
         ########################################
         ###             imprimir             ###
@@ -392,7 +524,7 @@ if __name__ == "__main__":
 
         Label(frame_4, text = "   ", font = (font ,content_size_font), bg = color_theme).pack(side = "left",pady = 15)
 
-        progressbar = ttk.Progressbar(frame_5, length = 100, mode = "determinate", style = "red.Horizontal.TProgressbar")
+        progressbar = ttk.Progressbar(frame_5, length = 100.0, mode = "determinate", style = "red.Horizontal.TProgressbar")
         progressbar.pack(fill = "both", expand = 1, )
         #progressbar.step(90.0)
 
@@ -411,5 +543,7 @@ if __name__ == "__main__":
         
 
         root.mainloop()
+        printer.send_now("G28")
+        printer.send_now("M104 S0")
         printer.disconnect()
 

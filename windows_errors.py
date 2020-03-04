@@ -19,14 +19,14 @@ color_bg_activate_button = "deep sky Blue"
 
 response = "hola"
 
-def kill_error(list_error):
-    root = Tk()
-    root.title("Error")
-    root.minsize (100,150)
-    root.resizable(0,0)
-    root.config(bg =color_theme)
+def kill_error(list_error,root):
+    root1 = Tk()
+    root1.title("Error")
+    root1.minsize (100,150)
+    root1.resizable(0,0)
+    root1.config(bg =color_theme)
 
-    frame = Frame(root, pady = 15,padx = 15,bg = color_theme )
+    frame = Frame(root1, pady = 15,padx = 15,bg = color_theme )
     Label(frame,text = "Error detectado: ",font = (font,content_size_font),bg = color_theme).pack()
 
     for i in range(0,len(list_error)):
@@ -37,10 +37,10 @@ def kill_error(list_error):
     frame.pack()
 
     Button(frame, text = "Aceptar" , activebackground = color_bg_activate_button_w, activeforeground = color_font_activate_button_w, 
-            font = (font ,content_size_font),bg = color_button_w, fg = color_text_button_w, command = root.destroy).pack()
+            font = (font ,content_size_font),bg = color_button_w, fg = color_text_button_w, command = root1.destroy).pack()
 
-    root.mainloop()
-    
+    root1.mainloop()
+    root.destroy()
 
 
 

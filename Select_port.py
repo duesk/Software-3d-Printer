@@ -71,12 +71,12 @@ def w_select_port():
     btn_connect = Button(text ="Conectar", command = lambda : connect(lst_box_puertos, root), )
     btn_connect.config(bg = color_button, fg = color_text_button ,font =(font,content_size_font))
     btn_connect.config( activebackground = color_bg_activate_button, activeforeground =color_font_activate_button, font = (font,content_size_font))
-    btn_connect.pack(padx = 15, pady = 15)
+    btn_connect.pack(padx = 15, pady = 10)
 
     btn_update = Button(text ="Actualizar", command = lambda : update(lst_box_puertos) )
     btn_update.config(bg = color_button, fg = color_text_button ,font =(font,content_size_font))
     btn_update.config( activebackground = color_bg_activate_button, activeforeground =color_font_activate_button, font = (font,content_size_font))
-    btn_update.pack(padx = 15, pady = 15)
+    btn_update.pack(padx = 15, pady = 10)
 
 
     root.mainloop()
