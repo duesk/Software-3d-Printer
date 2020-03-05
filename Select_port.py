@@ -52,6 +52,7 @@ def cerrar_w(root):
 def w_select_port():
     
     root = Tk()
+    root.iconbitmap("icon.ico")
     root.minsize(400, 150 )
     root.config(bg = color_theme)
     root.protocol("WM_DELETE_WINDOW", lambda : cerrar_w(root)) #accion al cerrar la ventana 
