@@ -590,9 +590,9 @@ class printcore():
             if self.z_feedrate is not None:
                 zFeedString = " F" + str(self.z_feedrate)
 
+            self.send_now("G1 Z" + str(self.pauseZ) + zFeedString)
             self.send_now("G1 X%s Y%s%s" % (self.pauseX, self.pauseY,
                                             xyFeedString))
-            self.send_now("G1 Z" + str(self.pauseZ) + zFeedString)
             self.send_now("G92 E" + str(self.pauseE))
 
             # go back to relative if needed

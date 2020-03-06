@@ -7,6 +7,7 @@ from printrun.printcore import printcore
 from printrun.gcoder import LightGCode as LightGCode 
 from windows_errors import kill_error as kill_error
 import asyncio
+import sys 
 
 import PIL
 from PIL import Image
@@ -14,6 +15,26 @@ from PIL import ImageTk
 
 import threading
 import time
+
+
+sys_mac     =   False
+sys_win     =   False
+sys_linux   =   False
+if sys.platform.startswith('darwin'):
+    from tkmacosx import Button
+    sys_mac = True
+
+if sys.platform.startswith('win'):
+    sys_win = True
+
+if sys.platform.startswith('linux') or sys.platform.startswith('cygwin'):
+    sys_linux = True
+
+print("sistema LNX:" + str(sys_linux))
+
+print("sistema WIN:" + str(sys_win))
+
+print("sistema MAC:" + str(sys_mac))
 
 ruta = ""
 gcode = []
@@ -24,6 +45,7 @@ is_printing = False
 is_pause = False
 response = False
 st_print = False
+
 
 len_gcode = 0.0
 index_actual = 0.0
@@ -45,15 +67,22 @@ def select_file(archivo_selected):
 
         archivo_selected.set("Seleccionado: "+archivo)
         lb_Select_file.pack()
-        btn_start_print["state"] = ACTIVE
-        btn_calibrate["state"] = ACTIVE
+        if sys_mac:
+            btn_start_print["state"] = NORMAL
+            btn_calibrate["state"] = NORMAL
+        if sys_win or sys_linux:
+            btn_start_print["state"] = ACTIVE
+            btn_calibrate["state"] = ACTIVE
 
     else:
         archivo_selected.set("Ningun archivo seleccionado")
         lb_Select_file.pack()
         btn_start_print["state"] = DISABLED
         btn_cancel["state"] = DISABLED
-        btn_calibrate["state"] = ACTIVE
+        if sys_mac:
+            btn_calibrate["state"] = NORMAL
+        if sys_win or sys_linux:
+            btn_calibrate["state"] = ACTIVE
 
 
 
@@ -90,23 +119,33 @@ def start_print():
             btn_calibrate["state"] = DISABLED
             bt_select_file["state"]=DISABLED
 
-            #btn_cancel["state"] = ACTIVE
-
 
 
         
 
 def cancel_window():
+    global sys_mac
+
     win = Toplevel()
     win.title('Peligro')
     win.iconbitmap("icon.ico")
     message = "¿Seguro que deseas cancelar la impresion?"
     Label(win, text=message).pack()
     frame = Frame(win)
-    Button(frame, text="Si", command= lambda : cancel_print(win),activebackground = color_bg_activate_button, activeforeground = color_font_activate_button, 
-            font = (font ,content_size_font),bg = color_button, fg = color_text_button).pack(side = "left")
-    Button(frame, text="No", command=win.destroy,activebackground = color_bg_activate_button, activeforeground = color_font_activate_button, 
-            font = (font ,content_size_font),bg = color_button, fg = color_text_button).pack(side = "left")
+    if sys_mac:
+        Button(frame, text="Si", command= lambda : cancel_print(win), font = (font ,content_size_font),bg = color_button, fg = color_text_button).pack(side = "left")
+        
+        Label(frame_4, text = "   ", font = (font ,content_size_font), bg = color_theme).pack(side = "left",pady = 15)
+        
+        Button(frame, text="No", command=win.destroy, font = (font ,content_size_font),bg = color_button, fg = color_text_button).pack(side = "left")
+    else:
+        Button(frame, text="Si", command= lambda : cancel_print(win),activebackground = color_bg_activate_button, activeforeground = color_font_activate_button, 
+                font = (font ,content_size_font),bg = color_button, fg = color_text_button).pack(side = "left")
+
+        Label(frame_4, text = "   ", font = (font ,content_size_font), bg = color_theme).pack(side = "left",pady = 15)
+
+        Button(frame, text="No", command=win.destroy,activebackground = color_bg_activate_button, activeforeground = color_font_activate_button, 
+                font = (font ,content_size_font),bg = color_button, fg = color_text_button).pack(side = "left")
     frame.pack()
 
 def cancel_print(win):
@@ -123,8 +162,11 @@ def cancel_print(win):
     is_pause = False
     btn_start_print["text"] = "Imprimir"
     btn_cancel["state"] = DISABLED
-    bt_select_file["state"]=ACTIVE
-    btn_calibrate["state"] = ACTIVE
+    if sys_mac:
+        bt_select_file["state"]=NORMAL
+    if sys_win or sys_linux:
+        bt_select_file["state"]=ACTIVE
+        btn_calibrate["state"] = ACTIVE
     status_label.set("Status: Impresion cancelada.")
     progressbar["value"] = 0
     progressbar.pack()
@@ -177,7 +219,10 @@ def thread_set(printer,temp_label_extruder):
                 printer.startprint(gcode)
                 printer.send_now("G90")
                 #is_printing = True
-                btn_cancel["state"] = ACTIVE
+                if  sys_linux or sys_win:
+                    btn_cancel["state"] = ACTIVE
+                if sys_mac:
+                    btn_cancel["state"]=NORMAL
                 bt_select_file["state"]=DISABLED
                 btn_start_print["text"] = "pausa"
                 status_label.set("Status: Imprimiendo ")
@@ -220,9 +265,13 @@ def thread_set(printer,temp_label_extruder):
                 progressbar["value"] = 99.9
                 progressbar.pack()
                 btn_start_print["text"] = "Imprimir"
-                btn_calibrate["state"] = ACTIVE
                 btn_cancel["state"] = DISABLED
-                bt_select_file["state"]=ACTIVE
+                if sys_linux or sys_win:
+                    btn_calibrate["state"] = ACTIVE
+                    bt_select_file["state"]=ACTIVE
+                if sys_mac:
+                    btn_calibrate["state"] = NORMAL
+                    bt_select_file["state"]=NORMAL
         #else:
             #status_label.set("Status: Impresora lista para imprimir")
         print("Status : thread is working")
@@ -249,15 +298,15 @@ def low_temp(temp_set_var):
 
 def position_1():
     printer.send_now("G28")
-    printer.send_now("G1 X45.0 Y-30.0 Z0.0 F3500")
+    printer.send_now("G1 X45.0 Y-30.0 Z0.150 F3500")
 
 def position_2():
     printer.send_now("G28")
-    printer.send_now("G1 X0.0 Y45.0 Z0.0 F3500")
+    printer.send_now("G1 X0.0 Y45.0 Z0.150 F3500")
 
 def position_3():
     printer.send_now("G28")
-    printer.send_now("G1 X-45.0 Y-30.0 Z0.0 F3500")
+    printer.send_now("G1 X-45.0 Y-30.0 Z0.150 F3500")
 
 def cerrar(root,win):
     root.deiconify()
@@ -266,6 +315,8 @@ def cerrar(root,win):
 
 
 def calibrate(root):
+    global sys_mac
+
     win = Toplevel()
     win.iconbitmap("icon.ico")
     #win.attributes("-type","notification")   #eliminar marco de sistema para cerrar
@@ -275,16 +326,25 @@ def calibrate(root):
     message = "Selecciona un boton para iniciar la calibracion "
     Label(win, text=message).pack()
     frame = Frame(win,pady = 50, padx = 50)
-    Button(frame, text="posición 1", command= position_1,activebackground = color_bg_activate_button, activeforeground = color_font_activate_button, 
-            font = (font ,content_size_font),bg = color_button, fg = color_text_button).grid(row = 1, column = 0 )
-    Button(frame, text="posición 2", command=position_2,activebackground = color_bg_activate_button, activeforeground = color_font_activate_button, 
-            font = (font ,content_size_font),bg = color_button, fg = color_text_button).grid(row = 1, column = 2)
-    Button(frame, text="posición 3", command=position_3,activebackground = color_bg_activate_button, activeforeground = color_font_activate_button, 
-            font = (font ,content_size_font),bg = color_button, fg = color_text_button).grid(row = 0, column = 1)
-    sub_frame = Frame(win, ) 
-    Label(sub_frame, text = "Para salir de la calibracion presione cerrar").pack()
-    Button(sub_frame, text="cerrar", command= lambda : cerrar(root,win),activebackground = color_bg_activate_button, activeforeground = color_font_activate_button, 
-            font = (font ,content_size_font),bg = color_button, fg = color_text_button).pack()
+
+    if sys_mac:
+        Button(frame, text="posición 1", command=position_1, font = (font ,content_size_font),bg = color_button, fg = color_text_button).grid(row = 1, column = 0)
+        Button(frame, text="posición 2", command=position_2, font = (font ,content_size_font),bg = color_button, fg = color_text_button).grid(row = 1, column = 2)
+        Button(frame, text="posición 3", command=position_3, font = (font ,content_size_font),bg = color_button, fg = color_text_button).grid(row = 0, column = 1)
+        sub_frame = Frame(win, ) 
+        Label(sub_frame, text = "Para salir de la calibracion presione cerrar").pack()
+        Button(sub_frame, text="cerrar", command= lambda : cerrar(root,win), font = (font ,content_size_font),bg = color_button, fg = color_text_button).pack()
+    else:
+        Button(frame, text="posición 1", command= position_1,activebackground = color_bg_activate_button, activeforeground = color_font_activate_button, 
+                font = (font ,content_size_font),bg = color_button, fg = color_text_button).grid(row = 1, column = 0 )
+        Button(frame, text="posición 2", command=position_2,activebackground = color_bg_activate_button, activeforeground = color_font_activate_button, 
+                font = (font ,content_size_font),bg = color_button, fg = color_text_button).grid(row = 1, column = 2)
+        Button(frame, text="posición 3", command=position_3,activebackground = color_bg_activate_button, activeforeground = color_font_activate_button, 
+                font = (font ,content_size_font),bg = color_button, fg = color_text_button).grid(row = 0, column = 1)
+        sub_frame = Frame(win, ) 
+        Label(sub_frame, text = "Para salir de la calibracion presione cerrar").pack()
+        Button(sub_frame, text="cerrar", command= lambda : cerrar(root,win),activebackground = color_bg_activate_button, activeforeground = color_font_activate_button, 
+                font = (font ,content_size_font),bg = color_button, fg = color_text_button).pack()
     frame.pack()
     sub_frame.pack( )
     status_label.set("Status: Calibrando ")
@@ -305,6 +365,8 @@ def cancel_and_quit(win,root):
 def close_window(root):
     global is_printing
     global st_print
+    global sys_mac
+
     if is_printing or st_print:
         win = Toplevel()
         win.iconbitmap("icon.ico")
@@ -312,10 +374,22 @@ def close_window(root):
         message = "¿Seguro que deseas cancelar la impresion y cerrar la ventana?"
         Label(win, text=message).pack()
         frame = Frame(win)
-        Button(frame, text="Si", command= lambda : cancel_and_quit(win,root),activebackground = color_bg_activate_button, activeforeground = color_font_activate_button, 
-                font = (font ,content_size_font),bg = color_button, fg = color_text_button).pack(side = "left")
-        Button(frame, text="No", command=win.destroy,activebackground = color_bg_activate_button, activeforeground = color_font_activate_button, 
-                font = (font ,content_size_font),bg = color_button, fg = color_text_button).pack(side = "left")
+
+        if sys_mac:
+            Button(frame, text="Si", command= lambda : cancel_and_quit(win,root), font = (font ,content_size_font),bg = color_button, fg = color_text_button).pack(side = "left")
+            
+            Label(frame_4, text = "   ", font = (font ,content_size_font), bg = color_theme).pack(side = "left",pady = 15)
+            
+            Button(frame, text="No", command=win.destroy, font = (font ,content_size_font),bg = color_button, fg = color_text_button).pack(side = "left")
+        else:
+            Button(frame, text="Si", command= lambda : cancel_and_quit(win,root),activebackground = color_bg_activate_button, activeforeground = color_font_activate_button, 
+                    font = (font ,content_size_font),bg = color_button, fg = color_text_button).pack(side = "left")
+            
+            Label(frame_4, text = "   ", font = (font ,content_size_font), bg = color_theme).pack(side = "left",pady = 15)
+
+            Button(frame, text="No", command=win.destroy,activebackground = color_bg_activate_button, activeforeground = color_font_activate_button, 
+                    font = (font ,content_size_font),bg = color_button, fg = color_text_button).pack(side = "left")
+
         frame.pack()
     else:
         root.destroy()
@@ -333,15 +407,24 @@ def close_window(root):
 if __name__ == "__main__":
 
     while True:
-        #variables de estilo
-        title_size_font = 16
-        content_size_font = 12
-        color_theme = "snow"
-        color_button = "deepskyblue3"
-        color_text_button = "gray99"
-        font = "Garuda"
-        color_font_activate_button = "gray25"
-        color_bg_activate_button = "deep sky Blue"
+        if sys_mac:
+                    #variables de estilo
+            title_size_font = 16
+            content_size_font = 12
+            color_theme = "snow"
+            color_button = "deepskyblue3"
+            color_text_button = "gray99"
+            font = "Garuda"
+        else:
+                    #variables de estilo
+            title_size_font = 16
+            content_size_font = 12
+            color_theme = "snow"
+            color_button = "deepskyblue3"
+            color_text_button = "gray99"
+            font = "Garuda"
+            color_font_activate_button = "gray25"
+            color_bg_activate_button = "deep pink"
 
         puerto = run_select_port()
         is_conect = False
@@ -368,7 +451,10 @@ if __name__ == "__main__":
                 init_window.iconbitmap("icon.ico")
                 init_window.config(bg = color_theme)
                 Label(init_window, text= "Error el programa no pudo conectarse ",font = (font ,content_size_font), bg = color_theme).pack(side = "left", anchor = "nw", pady = 30,padx = 30)
-                Button(init_window, text = "Reiniciar" , activebackground = color_bg_activate_button, activeforeground = color_font_activate_button, font = (font ,content_size_font),bg = color_button, fg = color_text_button, command = init_window.destroy).pack(side = "left")
+                if sys_mac:
+                    Button(init_window, text = "Reiniciar" , font = (font ,content_size_font),bg = color_button, fg = color_text_button, command = init_window.destroy).pack(side = "left")
+                else:
+                    Button(init_window, text = "Reiniciar" , activebackground = color_bg_activate_button, activeforeground = color_font_activate_button, font = (font ,content_size_font),bg = color_button, fg = color_text_button, command = init_window.destroy).pack(side = "left")
                 init_window.mainloop()
             if is_conect:
                 break
@@ -447,9 +533,9 @@ if __name__ == "__main__":
         #Label(frame_2, text = "   /   ", font = (font ,content_size_font), bg = color_theme).pack(side = "left",pady = 15)
         
         btn_lower_temp = Button(frame_2, text = "—",font = (font ,content_size_font),bg = color_button, fg = color_text_button, command = lambda: low_temp(temp_set_var) )
-        btn_lower_temp.config(activebackground = color_bg_activate_button, activeforeground = color_font_activate_button)
+        if sys_win or sys_linux:
+            btn_lower_temp.config(activebackground = color_bg_activate_button, activeforeground = color_font_activate_button)
         btn_lower_temp.pack(side = "left", anchor = "nw", pady = 10)
-
 
         #separador
         Label(frame_2, text = " ", font = (font ,content_size_font), bg = color_theme).pack(side = "left",pady = 15)
@@ -462,7 +548,9 @@ if __name__ == "__main__":
         Label(frame_2, text = " ", font = (font ,content_size_font), bg = color_theme).pack(side = "left",pady = 15)
 
         btn_higher_temp = Button(frame_2, text = "+",font = (font ,content_size_font),bg = color_button, fg = color_text_button, command = lambda: high_temp(temp_set_var) )
-        btn_higher_temp.config(activebackground = color_bg_activate_button, activeforeground = color_font_activate_button)
+        if sys_win or sys_linux:
+            btn_higher_temp.config(activebackground = color_bg_activate_button, activeforeground = color_font_activate_button)
+
         btn_higher_temp.pack(side = "left", anchor = "nw",pady= 10)
 
         ########################################
@@ -480,7 +568,8 @@ if __name__ == "__main__":
         ttk.Separator(frame_3, orient='horizontal').pack( fill='x') #linea separadora
 
         bt_select_file = Button(frame_3, text = " Seleccionar ",font = (font ,content_size_font),bg = color_button, fg = color_text_button, command = lambda: select_file(archivo_selected))
-        bt_select_file.config(activebackground = color_bg_activate_button, activeforeground = color_font_activate_button)
+        if sys_win or sys_linux:
+            bt_select_file.config(activebackground = color_bg_activate_button, activeforeground = color_font_activate_button)
         bt_select_file.pack(side = "left", pady = 10)
 
         Label(frame_3, text = "   ", font = (font ,content_size_font), bg = color_theme).pack(side = "left",pady = 15)
@@ -502,7 +591,9 @@ if __name__ == "__main__":
 
         btn_start_print = Button(frame_4, text = "Imprimir", font = (font ,content_size_font),bg = color_button, 
                                 fg = color_text_button, state = DISABLED, command =  start_print)
-        btn_start_print.config(activebackground = color_bg_activate_button, activeforeground = color_font_activate_button)
+        
+        if sys_win or sys_linux:
+            btn_start_print.config(activebackground = color_bg_activate_button, activeforeground = color_font_activate_button)
         btn_start_print.pack(side = "left", pady = 10)
 
         Label(frame_4, text = "   ", font = (font ,content_size_font), bg = color_theme).pack(side = "left",pady = 15)
@@ -510,12 +601,16 @@ if __name__ == "__main__":
 
         btn_cancel = Button(frame_4, text = "Cancelar",font = (font ,content_size_font),bg = color_button, 
                             fg = color_text_button, state = DISABLED, command = cancel_window )
-        btn_cancel.config(activebackground = color_bg_activate_button, activeforeground = color_font_activate_button)
+        if sys_win or sys_linux:
+            btn_cancel.config(activebackground = color_bg_activate_button, activeforeground = color_font_activate_button)
         btn_cancel.pack(side = "left", pady = 10)        
-        
-        btn_calibrate = Button(frame_4, text = "Calibrar",font = (font ,content_size_font),bg = color_button, 
-                            fg = color_text_button, state = ACTIVE, command = lambda: calibrate(root))
-        btn_calibrate.config(activebackground = color_bg_activate_button, activeforeground = color_font_activate_button)
+
+        Label(frame_4, text = "   ", font = (font ,content_size_font), bg = color_theme).pack(side = "left",pady = 15)
+
+        btn_calibrate = Button(frame_4, text = "Calibrar",font = (font ,content_size_font),bg = color_button,
+                                fg = color_text_button, command = lambda: calibrate(root))
+        if sys_win or sys_linux:
+            btn_calibrate.config(activebackground = color_bg_activate_button, activeforeground = color_font_activate_button)
         btn_calibrate.pack(side = "left", pady = 10)
         
 
