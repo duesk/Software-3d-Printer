@@ -443,7 +443,7 @@ if __name__ == "__main__":
             color_text_button = "gray99"
             font = "Garuda"
             color_font_activate_button = "gray25"
-            color_bg_activate_button = "deep pink"
+            color_bg_activate_button = "deepskyblue"
 
         puerto = run_select_port()
         is_conect = False
