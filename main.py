@@ -51,6 +51,9 @@ len_gcode = 0.0
 index_actual = 0.0
 
 def select_file(archivo_selected):
+    global sys_linux
+    global sys_mac
+    global sys_win
     global ruta 
     global gcode 
     ruta = Filedialog.askopenfilename(initialdir = "~/Escritorio", title = "Abrir archivo" , filetypes = (("Gcode", "*.gcode"),)  )
@@ -124,7 +127,9 @@ def start_print():
         
 
 def cancel_window():
+    global sys_linux
     global sys_mac
+    global sys_win
 
     win = Toplevel()
     win.title('Peligro')
@@ -149,6 +154,9 @@ def cancel_window():
     frame.pack()
 
 def cancel_print(win):
+    global sys_linux
+    global sys_mac
+    global sys_win
     global is_printing
     global is_pause
     global response
@@ -174,6 +182,9 @@ def cancel_print(win):
   
 
 def thread_set(printer,temp_label_extruder):
+    global sys_linux
+    global sys_mac
+    global sys_win
     global temp_state
     global temp_set
     global is_pause
@@ -315,7 +326,9 @@ def cerrar(root,win):
 
 
 def calibrate(root):
+    global sys_linux
     global sys_mac
+    global sys_win
 
     win = Toplevel()
     win.iconbitmap("icon.ico")
@@ -363,6 +376,9 @@ def cancel_and_quit(win,root):
     root.destroy()
 
 def close_window(root):
+    global sys_linux
+    global sys_mac
+    global sys_win
     global is_printing
     global st_print
     global sys_mac
@@ -405,6 +421,7 @@ def close_window(root):
 
 
 if __name__ == "__main__":
+
 
     while True:
         if sys_mac:
