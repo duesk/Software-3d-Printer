@@ -33,15 +33,7 @@ if sys.platform.startswith('linux') or sys.platform.startswith('cygwin'):
 puerto = []
 send_port = None
 
-#variables de stylo
-title_size_font = 16
-content_size_font = 12
-color_theme = "snow"
-color_button = "deepskyblue3"
-color_text_button = "gray99"
-font = "Garuda"
-color_font_activate_button = "gray25"
-color_bg_activate_button = "deep sky Blue"
+
 
 
 def from_rgb(rgb):
@@ -83,13 +75,23 @@ def w_select_port():
     global sys_win
 
     if sys_mac:
-            #variables de estilo
+        #variables de estilo
         title_size_font = 16
         content_size_font = 12
         color_theme = "snow"
         color_button = "deepskyblue3"
         color_text_button = "gray99"
         font = "Garuda"
+    if sys_linux or sys_win:
+        #variables de stylo
+        title_size_font = 16
+        content_size_font = 12
+        color_theme = "snow"
+        color_button = "deepskyblue3"
+        color_text_button = "gray99"
+        font = "Garuda"
+        color_font_activate_button = "gray25"
+        color_bg_activate_button = "deep sky Blue"
 
     
     root = Tk()

@@ -15,11 +15,15 @@ ubuntu main.spec
 
 
 
-
+# MacOS
 py2applet --make-setup MyApplication.py
 Wrote setup.py
 
 python3 setup.py py2app -A
 
 
+# windows 
 
+pyinstaller --windowed --onefile --icon=icon.ico main.py
+
+# Linux
