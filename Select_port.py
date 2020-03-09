@@ -1,6 +1,26 @@
 from tkinter import *
+<<<<<<< HEAD
 from Port_connect import *
 import sys 
+=======
+from Port_connect import serial_ports
+
+import sys 
+
+sys_mac     =   False
+sys_win     =   False
+sys_linux   =   False
+if sys.platform.startswith('darwin'):
+    from tkmacosx import Button
+    sys_mac = True
+
+if sys.platform.startswith('win'):
+    sys_win = True
+
+if sys.platform.startswith('linux') or sys.platform.startswith('cygwin'):
+    sys_linux = True
+
+>>>>>>> 22321dd7dd96423399a7072a85dfc255b6d57362
 
 sys_mac     =   False
 sys_win     =   False
@@ -78,7 +98,8 @@ def w_select_port():
 
     
     root = Tk()
-    root.iconbitmap("icon.ico")
+    if sys_mac or sys_win:
+        root.iconbitmap("icon.ico")
     root.minsize(400, 150 )
     root.config(bg = color_theme)
     root.protocol("WM_DELETE_WINDOW", lambda : cerrar_w(root)) #accion al cerrar la ventana 

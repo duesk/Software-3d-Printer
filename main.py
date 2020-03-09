@@ -133,7 +133,8 @@ def cancel_window():
 
     win = Toplevel()
     win.title('Peligro')
-    win.iconbitmap("icon.ico")
+    if sys_mac or sys_win:
+        win.iconbitmap("icon.ico")
     message = "¿Seguro que deseas cancelar la impresion?"
     Label(win, text=message).pack()
     frame = Frame(win)
@@ -331,7 +332,8 @@ def calibrate(root):
     global sys_win
 
     win = Toplevel()
-    win.iconbitmap("icon.ico")
+    if sys_mac or sys_win:
+        win.iconbitmap("icon.ico")
     #win.attributes("-type","notification")   #eliminar marco de sistema para cerrar
     #win.overrideredirect(True)
     win.protocol("WM_DELETE_WINDOW", lambda : cerrar(root,win)) #accion al cerrar la ventana 
@@ -385,7 +387,8 @@ def close_window(root):
 
     if is_printing or st_print:
         win = Toplevel()
-        win.iconbitmap("icon.ico")
+        if sys_mac or sys_win:
+            win.iconbitmap("icon.ico")
         win.title('Peligro')
         message = "¿Seguro que deseas cancelar la impresion y cerrar la ventana?"
         Label(win, text=message).pack()
@@ -465,7 +468,8 @@ if __name__ == "__main__":
             if is_conect == False:
                 init_window = Tk()
                 init_window.title("Error de conexión ")
-                init_window.iconbitmap("icon.ico")
+                if sys_mac or sys_win:
+                    init_window.iconbitmap("icon.ico")
                 init_window.config(bg = color_theme)
                 Label(init_window, text= "Error el programa no pudo conectarse ",font = (font ,content_size_font), bg = color_theme).pack(side = "left", anchor = "nw", pady = 30,padx = 30)
                 if sys_mac:
@@ -482,7 +486,8 @@ if __name__ == "__main__":
         ##################            interfaz             ######################
         #########################################################################
         root = Tk()
-        root.iconbitmap("icon.ico")
+        if sys_mac or sys_win:
+            root.iconbitmap("icon.ico")
         root.title( "Colibri 3D")
         root.minsize(500,310)
         #root.maxsize(500,700)
