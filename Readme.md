@@ -27,3 +27,9 @@ python3 setup.py py2app -A
 pyinstaller --windowed --onefile --icon=icon.ico main.py
 
 # Linux
+pyinstaller --windowed --onefile --icon=icon.ico main.py
+
+ubuntu main.spec
+    datas=[('/usr/lib/python3/dist-packages/PIL/','PIL'),],
+
+    pyinstaller --windowed --onefile --icon=icon.ico main.spec
