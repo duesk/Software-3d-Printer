@@ -1,8 +1,4 @@
 from tkinter import *
-<<<<<<< HEAD
-from Port_connect import *
-import sys 
-=======
 from Port_connect import serial_ports
 
 import sys 
@@ -20,7 +16,6 @@ if sys.platform.startswith('win'):
 if sys.platform.startswith('linux') or sys.platform.startswith('cygwin'):
     sys_linux = True
 
->>>>>>> 22321dd7dd96423399a7072a85dfc255b6d57362
 
 sys_mac     =   False
 sys_win     =   False

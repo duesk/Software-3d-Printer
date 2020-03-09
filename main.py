@@ -180,7 +180,6 @@ def cancel_print(win):
     progressbar["value"] = 0
     progressbar.pack()
 
-  
 
 def thread_set(printer,temp_label_extruder):
     global sys_linux
